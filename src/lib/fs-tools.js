@@ -1,11 +1,13 @@
 import fs from 'fs-extra'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+// import { createReadStream } from 'fs'
 
-const { writeFile } = fs
+const { writeFile, createReadStream } = fs
 
 const authorsPublicFolderPath = join(process.cwd(), '/public/img/authors')
 const blogPostsPublicFolderPath = join(process.cwd(), '/public/img/blogPosts')
+const authorsJSONPath = join(process.cwd(), 'src/data/authors.json')
 
 // const apisFolderPath = join(dirname(fileURLToPath(import.meta.url)), '/apis')
 
@@ -19,3 +21,5 @@ export const saveAuthorsAvatar = (fileName, contentAsBuffer) =>
 
 export const saveBlogPostCoverPhoto = (fileName, contentAsBuffer) =>
   writeFile(join(blogPostsPublicFolderPath, fileName), contentAsBuffer)
+
+export const getAuthorsReadableStream = () => createReadStream(authorsJSONPath)

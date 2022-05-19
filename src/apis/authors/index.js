@@ -6,9 +6,58 @@ import uniqid from 'uniqid'
 import multer from 'multer'
 // import { getAuthors } from '../../lib/fs-tools'
 import { saveAuthorsAvatar } from '../../lib/fs-tools.js'
-// import fs from 'fs-extra'
+import fs from 'fs-extra'
+import json2csv from 'json2csv'
+import { pipeline } from 'stream'
+import { getAuthorsReadableStream } from '../../lib/fs-tools.js'
+import nodemailer from 'nodemailer'
 
 const authorsRouter = express.Router()
+
+const sendEmail = async () => {
+  let testAccount = await nodemailer.createTestAccount()
+
+  let transporter = nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass
+    }
+  })
+
+  let info = await transporter.sendMail({
+    from: '"Leon Bourke" <lbourke1234@gmail.com>',
+    to: 'lbourke1234@gmail.com',
+    subject: 'Hello ',
+    text: 'Hello world?',
+    html: '<b>Hello world?</B>'
+  })
+
+  transporter.verify((error, success) => {
+    if (error) {
+      console.log(error)
+    } else {
+      console.log('Server is ready to take our messages')
+    }
+  })
+
+  console.log('Message sent: %s', info.messageId)
+
+  console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info))
+}
+
+authorsRouter.post('/:random/sendemailtest', (req, res, next) => {
+  try {
+    console.log('before email')
+    sendEmail()
+    console.log('after email')
+  } catch (error) {
+    console.log('error in email catch')
+    next(error)
+  }
+})
 
 // const currentFileURL = import.meta.url
 // console.log('current file url: ', currentFileURL)
@@ -81,7 +130,7 @@ authorsRouter.post(
 
 authorsRouter.get('/:userId', (req, res) => {
   const userID = req.params.userId
-  console.log('User Id: ', userID)
+  console.log('User Id---------: ', userID)
 
   const authors = JSON.parse(fs.readFileSync(authorsJSONPath))
 
@@ -117,6 +166,25 @@ authorsRouter.delete('/:Id', (req, res) => {
   fs.writeFileSync(authorsJSONPath, JSON.stringify(remainingAuthors))
 
   res.status(204).send()
+})
+
+authorsRouter.get('/:anything/csv', (req, res, next) => {
+  try {
+    res.setHeader('Content-Disposition', 'attachment; filename="authors.csv"')
+
+    const source = getAuthorsReadableStream()
+    const destination = res
+    const transform = new json2csv.Transform({
+      fields: ['name', 'surname', 'email', 'dob', 'id', 'avatar', 'updatedAt']
+    })
+
+    pipeline(source, transform, destination, (err) => {
+      if (err) console.log('Pipeline error', err)
+    })
+  } catch (error) {
+    console.log('csv catch error')
+    next(error)
+  }
 })
 
 export default authorsRouter
