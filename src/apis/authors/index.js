@@ -48,11 +48,11 @@ const sendEmail = async () => {
   console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info))
 }
 
-authorsRouter.post('/:random/sendemailtest', (req, res, next) => {
+authorsRouter.get('/:random/sendemailtest', async (req, res, next) => {
   try {
-    console.log('before email')
-    sendEmail()
-    console.log('after email')
+    console.log(sendEmail())
+    await sendEmail()
+    console.log('hello')
   } catch (error) {
     console.log('error in email catch')
     next(error)
