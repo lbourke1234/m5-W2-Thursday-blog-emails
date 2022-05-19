@@ -15,15 +15,14 @@ import nodemailer from 'nodemailer'
 const authorsRouter = express.Router()
 
 const sendEmail = async () => {
-  let testAccount = await nodemailer.createTestAccount()
+  // let testAccount = await nodemailer.createTestAccount()
 
   let transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
+    service: 'gmail',
     secure: false,
     auth: {
-      user: testAccount.user,
-      pass: testAccount.pass
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD
     }
   })
 
@@ -50,9 +49,9 @@ const sendEmail = async () => {
 
 authorsRouter.get('/:random/sendemailtest', async (req, res, next) => {
   try {
-    console.log(sendEmail())
+    console.log(process.env.EMAIL_USERNAME)
     await sendEmail()
-    console.log('hello')
+    // console.log('hello')
   } catch (error) {
     console.log('error in email catch')
     next(error)
